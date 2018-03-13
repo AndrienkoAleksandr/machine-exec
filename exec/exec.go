@@ -1,30 +1,28 @@
 package exec
 
 import (
+	"fmt"
 	"golang.org/x/net/websocket"
 	"github.com/docker/docker/client"
-	"fmt"
+	"github.com/docker/docker/api/types"
+	"encoding/json"
+	"errors"
 )
 
 var cli *client.Client = createDockerClient()
 
-type MachineExec struct {
+type MachineIdentier struct {
 	machineName string
 	wsId string
-	cmd string
-	pty bool
 }
 
-func Create(ws *websocket.Conn)  {
-	fmt.Println("create")
-}
-
-func Get(ws *websocket.Conn) {
-	fmt.Println("get")
-}
-
-func Resize(ws *websocket.Conn)  {
-	fmt.Println("resize")
+type MachineExec struct {
+	identifier MachineIdentier `json:"identifier"`
+	cmd string `json:"string"`
+	pty bool `json:"bool"`
+	cols int `json:"cols"`
+	rows int `json:"rows"`
+	id int64 `json:"id"`
 }
 
 func createDockerClient() *client.Client {
@@ -33,4 +31,53 @@ func createDockerClient() *client.Client {
 		panic(err)
 	}
 	return cli
+}
+
+//todo exec registry ?
+func Create(ws *websocket.Conn) {
+	fmt.Println("create")
+
+	machineExec, err := parseMachineExec(ws);
+	if err != nil {
+		fmt.Errorf(err.Error()) // todo fatality ?
+		return
+	}
+
+	fmt.Println("MachineExec parsed!!!", machineExec)
+	container, err := findContainer(&machineExec.identifier)
+	if err != nil {
+		fmt.Errorf(err.Error()) // todo fatality ?
+		return
+	}
+
+	fmt.Println("found container for creation exec! id=", container.ID)
+}
+
+// todo maybe attach is better name...
+func Get(ws *websocket.Conn) {
+	fmt.Println("get")
+}
+
+func Resize(ws *websocket.Conn) {
+	fmt.Println("resize")
+}
+
+//todo kill exec
+
+func findContainer(identifier *MachineIdentier) (*types.Container, error) {
+	return nil, nil
+}
+
+func parseMachineExec(ws *websocket.Conn) (*MachineExec, error) {
+	buff := make([]byte, 8192)
+	if _, err := ws.Read(buff); err != nil {
+		return nil, errors.New("Failed to read machine exec body " + err.Error());
+	}
+
+	machineExec := &MachineExec{}
+	if err := json.Unmarshal(buff, machineExec); err != nil {
+		return nil, errors.New("Failed to parse MachineExec " +  err.Error());
+	}
+
+	return machineExec, nil
 }
