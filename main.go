@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
+	exec "github.com/AndrienkoAleksandr/machine-exec/exec"
+	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
-	"golang.org/x/net/websocket"
-	"github.com/AndrienkoAleksandr/machine-exec/exec"
 )
 
 var url, filesPath string
@@ -19,7 +19,7 @@ func main() {
 	flag.Parse()
 
 	http.Handle("/", http.FileServer(http.Dir(filesPath)))
-	http.Handler("/exec-machine/", websocket.Handler(ExecMachine);
+	http.Handle("/exec-machine/", websocket.Handler(exec.ExecMachine))
 
 	log.Printf("Staring file server on '%s'", url)
 

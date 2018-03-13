@@ -1,5 +1,9 @@
 package exec
 
-func ExecMachine()  {
+import (
+	"golang.org/x/net/websocket"
+)
+
+func ExecMachine(ws *websocket.Conn)  {
 
 }
