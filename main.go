@@ -19,7 +19,10 @@ func main() {
 	flag.Parse()
 
 	http.Handle("/", http.FileServer(http.Dir(filesPath)))
-	http.Handle("/exec-machine/", websocket.Handler(exec.ExecMachine))
+	http.Handle("/exec-machine/create", websocket.Handler(exec.Create))
+	http.Handle("/exec-machine/get", websocket.Handler(exec.Get))
+	http.Handle("/exec-machine/resize", websocket.Handler(exec.Resize))
+	//todo detach ?
 
 	log.Printf("Staring file server on '%s'", url)
 
