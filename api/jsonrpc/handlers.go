@@ -17,6 +17,17 @@ func jsonRpcCreateExec(tun *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTr
 	fmt.Println("Create with json RPC!")
 
 	//t.SendError(jsonrpc.NewArgsError(errors.New("Something went wrong")));
+
+	tun.Notify("result", machineExec)
+	t.Send(machineExec)
+}
+
+func jsonRpcGetExec(_ *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmitter) {
+	machineExec := params.(*model.MachineExec)
+
+	fmt.Println("Get with json RPC!")
+
+	//t.SendError(jsonrpc.NewArgsError(errors.New("Something went wrong")));
 	t.Send(machineExec)
 }
 
@@ -28,13 +39,4 @@ func jsonrpcResizeExec(_ *jsonrpc.Tunnel, params interface{}) (interface{}, erro
 	fmt.Println("Resize with json RPC!")
 
 	return &OperationResult{Id: 123, Text: "Successfully resize"}, nil
-}
-
-func jsonRpcGetExec(_ *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmitter) {
-	machineExec := params.(*model.MachineExec)
-
-	fmt.Println("Get with json RPC!")
-
-	//t.SendError(jsonrpc.NewArgsError(errors.New("Something went wrong")));
-	t.Send(machineExec)
 }

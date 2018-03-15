@@ -7,9 +7,9 @@ import (
 
 // Constants that represent RPC methods identifiers.
 const (
-	CreateMethod = "create.exec"
-	GetMethod    = "get.exec"
-	ResizeMethod = "resize.exec"
+	CreateMethod = "exec.create"
+	GetMethod    = "exec.get"
+	ResizeMethod = "exec.resize"
 )
 
 // Error codes.

@@ -23,6 +23,8 @@ func init() {
 func main() {
 	flag.Parse()
 
+	//todo apply exec-machine context again
+
 	appRoutes := []rest.RoutesGroup{
 		restApi.HTTPRoutes,
 		{
