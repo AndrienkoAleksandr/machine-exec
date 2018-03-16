@@ -1,8 +1,8 @@
 package model
 
 type MachineIdentifier struct {
-	MachineName string `json:"machine-name"`
-	WsId        string `json:"ws-id"`
+	MachineName string `json:"machineName"`
+	WsId        string `json:"workspaceId"`
 }
 
 type MachineExec struct {

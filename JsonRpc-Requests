@@ -1,18 +1,15 @@
+Start point
 ws://localhost:4444/connect
 
 
 Create
-{"jsonrpc":"2.0","method":"exec.create","params":{"identifier":{"machine-name":"dev-machine", "ws-id":"workspacethvmvurngk7sjrvb"}, "cmd":"/bin/bash", "pty": true, "cols":24, "rows":80, "id": 900 }}
+{"jsonrpc":"2.0", "id": 0, "method":"exec.create","params":{"identifier":{"machineName":"dev-machine", "workspaceId":"workspacethvmvurngk7sjrvb"}, "cmd":"/bin/bash", "pty": true, "cols":24, "rows":80, "id": 900 }}
 
 Get
 todo
 
 Resize
+todo
 
-
-
-
-
-{"jsonrpc":"2.0","method":"test","params":{"test": "green tree"}}
-
-{"jsonrpc":"2.0","method":"process.start","id":"11","params":{"commandLine":"sleep 1","name":"newCustom-1","type":"custom"}}
+Kill
+todo

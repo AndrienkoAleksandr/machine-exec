@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/AndrienkoAleksandr/machine-exec/api/model"
 	"github.com/eclipse/che/agents/go-agents/core/jsonrpc"
+	"log"
 )
 
 type OperationResult struct {
@@ -11,18 +12,18 @@ type OperationResult struct {
 	Text string `json:"text"`
 }
 
-func jsonRpcCreateExec(tun *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmitter) {
+func jsonrpcCreateExec(tun *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmitter) {
 	machineExec := params.(*model.MachineExec)
 
 	fmt.Println("Create with json RPC!")
 
 	//t.SendError(jsonrpc.NewArgsError(errors.New("Something went wrong")));
 
-	tun.Notify("result", machineExec)
 	t.Send(machineExec)
+	//tun.Notify("result", machineExec)
 }
 
-func jsonRpcGetExec(_ *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmitter) {
+func jsonrpcGetExec(_ *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmitter) {
 	machineExec := params.(*model.MachineExec)
 
 	fmt.Println("Get with json RPC!")
@@ -39,4 +40,11 @@ func jsonrpcResizeExec(_ *jsonrpc.Tunnel, params interface{}) (interface{}, erro
 	fmt.Println("Resize with json RPC!")
 
 	return &OperationResult{Id: 123, Text: "Successfully resize"}, nil
+}
+
+
+func jsonrpcStartExec(tun *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmitter) {
+	machineExec := params.(*model.MachineExec)
+
+	t.Send(machineExec)
 }

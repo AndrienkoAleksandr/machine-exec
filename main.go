@@ -65,5 +65,23 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout:  10 * time.Second,
 	}
-	log.Fatal(server.ListenAndServe())
+	log.Println(server)
+
+
+
+
+	////////////////
+	//http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+	//	writer.Write([]byte("Hello"))
+	//});
+	//http.Server
+
+	//go func() {
+	server.ListenAndServe()
+	//}()
+	//
+	//err := http.ListenAndServe(url, nil)
+	//if err != nil {
+	//	log.Fatalf("Could not start file server by address: '%s'", url)
+	//}
 }

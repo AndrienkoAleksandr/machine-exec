@@ -7,6 +7,7 @@ import (
 
 // Constants that represent RPC methods identifiers.
 const (
+	StartMethod  = "exec.start"
 	CreateMethod = "exec.create"
 	GetMethod    = "exec.get"
 	ResizeMethod = "exec.resize"
@@ -26,17 +27,24 @@ var RPCRoutes = jsonrpc.RoutesGroup{
 		{
 			Method: CreateMethod,
 			Decode: jsonrpc.FactoryDec(func() interface{} { return &model.MachineExec{} }),
-			Handle: jsonRpcCreateExec,
+			Handle: jsonrpcCreateExec,
 		},
 		{
 			Method: GetMethod,
 			Decode: jsonrpc.FactoryDec(func() interface{} { return &model.MachineExec{} }),
-			Handle: jsonRpcGetExec,
+			Handle: jsonrpcGetExec,
 		},
 		{
 			Method: ResizeMethod,
 			Decode: jsonrpc.FactoryDec(func() interface{} { return &OperationResult{} }),
 			Handle: jsonrpc.HandleRet(jsonrpcResizeExec),
 		},
+		{
+			Method: StartMethod,
+			Decode: jsonrpc.FactoryDec(func() interface{} { return &model.MachineExec{} }),
+			Handle: jsonrpcStartExec,
+		},
 	},
 }
+
+//{"jsonrpc":"2.0","method":"exec.start", "id":"12","params":{"identifier":{"machineName":"dev-machine", "workspaceId":"workspacethvmvurngk7sjrvb"}, "cmd":"/bin/bash", "pty": true, "cols":24, "rows":80, "id": 900 }}
