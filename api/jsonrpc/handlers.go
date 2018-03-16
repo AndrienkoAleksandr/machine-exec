@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/AndrienkoAleksandr/machine-exec/api/model"
 	"github.com/eclipse/che/agents/go-agents/core/jsonrpc"
-	"log"
 )
 
 type OperationResult struct {
