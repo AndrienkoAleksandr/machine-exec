@@ -12,6 +12,7 @@ import (
 	"github.com/eclipse/che/agents/go-agents/core/jsonrpc/jsonrpcws"
 	"github.com/eclipse/che/agents/go-agents/core/rest"
 	"github.com/eclipse/che-lib/websocket"
+	"fmt"
 )
 
 var (
@@ -46,6 +47,7 @@ func main() {
 					Path:   "/connect",
 					Name:   "Connect to MachineExec api(websocket)",
 					HandleFunc: func(w http.ResponseWriter, r *http.Request, _ rest.Params) error {
+						fmt.Println("Connected to the MachineExec json-rpc")
 						conn, err := jsonrpcws.Upgrade(w, r)
 						if err != nil {
 							return err

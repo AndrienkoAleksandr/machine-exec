@@ -7,10 +7,10 @@ import (
 
 // Constants that represent RPC methods identifiers.
 const (
-	StartMethod  = "exec.start"
-	CreateMethod = "exec.create"
-	GetMethod    = "exec.get"
-	ResizeMethod = "exec.resize"
+	StartMethod  = "start"
+	CreateMethod = "create"
+	GetMethod    = "get"
+	ResizeMethod = "resize"
 )
 
 // Error codes.
@@ -47,4 +47,4 @@ var RPCRoutes = jsonrpc.RoutesGroup{
 	},
 }
 
-//{"jsonrpc":"2.0","method":"exec.start", "id":"12","params":{"identifier":{"machineName":"dev-machine", "workspaceId":"workspacethvmvurngk7sjrvb"}, "cmd":"/bin/bash", "pty": true, "cols":24, "rows":80, "id": 900 }}
+//{"jsonrpc":"2.0","method":"start", "id":"12","params":{"identifier":{"machineName":"dev-machine", "workspaceId":"workspacethvmvurngk7sjrvb"}, "cmd":"/bin/bash", "pty": true, "cols":24, "rows":80, "id": 900 }}
