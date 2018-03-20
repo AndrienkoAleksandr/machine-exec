@@ -8,8 +8,11 @@ type MachineIdentifier struct {
 type MachineExec struct {
 	Identifier MachineIdentifier `json:"identifier"`
 	Cmd        string            `json:"cmd"`
-	Pty        bool              `json:"pty"`
+	Tty        bool              `json:"tty"`
 	Cols       int               `json:"cols"`
 	Rows       int               `json:"rows"`
-	ID         int64             `json:"id"`
+
+	// unique client id, real execId should be hidden from client to prevent serialization
+	ID     int `json:"id"`
+	ExecId string
 }

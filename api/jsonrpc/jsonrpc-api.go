@@ -7,10 +7,10 @@ import (
 
 // Constants that represent RPC methods identifiers.
 const (
-	StartMethod  = "start"
 	CreateMethod = "create"
 	GetMethod    = "get"
 	ResizeMethod = "resize"
+	KillMethod = "kill"
 )
 
 // Error codes.
@@ -27,24 +27,27 @@ var RPCRoutes = jsonrpc.RoutesGroup{
 		{
 			Method: CreateMethod,
 			Decode: jsonrpc.FactoryDec(func() interface{} { return &model.MachineExec{} }),
-			Handle: jsonrpcCreateExec,
+			Handle: jsonRpcCreateExec,
 		},
 		{
 			Method: GetMethod,
 			Decode: jsonrpc.FactoryDec(func() interface{} { return &model.MachineExec{} }),
-			Handle: jsonrpcGetExec,
+			Handle: jsonRpcGetExec,
 		},
 		{
 			Method: ResizeMethod,
 			Decode: jsonrpc.FactoryDec(func() interface{} { return &OperationResult{} }),
-			Handle: jsonrpc.HandleRet(jsonrpcResizeExec),
+			Handle: jsonrpc.HandleRet(jsonRpcResizeExec),
 		},
 		{
-			Method: StartMethod,
-			Decode: jsonrpc.FactoryDec(func() interface{} { return &model.MachineExec{} }),
-			Handle: jsonrpcStartExec,
+			Method: KillMethod,
+			Decode: jsonrpc.FactoryDec(func() interface{} {
+				return &OperationResult{}
+			}),
+			Handle: jsonrpc.HandleRet(jsonRpcKillExec),
 		},
 	},
 }
 
-//{"jsonrpc":"2.0","method":"start", "id":"12","params":{"identifier":{"machineName":"dev-machine", "workspaceId":"workspacethvmvurngk7sjrvb"}, "cmd":"/bin/bash", "pty": true, "cols":24, "rows":80, "id": 900 }}
+// create:
+// {"jsonrpc":"2.0","method":"create", "id":"12","params":{"identifier":{"machineName":"dev-machine", "workspaceId":"workspacethvmvurngk7sjrvb"}, "cmd":"/bin/bash", "pty": true, "cols":24, "rows":80, "id": 900 }}

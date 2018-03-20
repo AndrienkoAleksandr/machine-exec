@@ -2,29 +2,19 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	jsonRpcApi "github.com/AndrienkoAleksandr/machine-exec/api/jsonrpc"
 	restApi "github.com/AndrienkoAleksandr/machine-exec/api/rest"
-	"log"
-	"net/http"
-	"time"
-	//"golang.org/x/net/websocket"
 	"github.com/eclipse/che/agents/go-agents/core/jsonrpc"
 	"github.com/eclipse/che/agents/go-agents/core/jsonrpc/jsonrpcws"
 	"github.com/eclipse/che/agents/go-agents/core/rest"
-	"github.com/eclipse/che-lib/websocket"
-	"fmt"
+	"net/http"
+	"time"
+	"github.com/AndrienkoAleksandr/machine-exec/api/websocket"
 )
 
 var (
 	url, filesPath string
-
-	upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}
-
-	//todo ping-pong handler
 )
 
 func init() {
@@ -59,25 +49,9 @@ func main() {
 				},
 				{
 					Method: "GET",
-					Path:   "/pty", //todo apply id!!!!!
-					Name:   "Connect to pty exec(websocket)",
-					HandleFunc: func(w http.ResponseWriter, r *http.Request, _ rest.Params) error {
-						log.Println("Connect to gorilla pty")
-						conn, err := upgrader.Upgrade(w, r, nil)
-						if err != nil {
-							log.Println("Error " + err.Error())
-							return err
-						}
-
-						defer conn.Close()
-
-						conn.WriteMessage(websocket.TextMessage, []byte("Hello from websocket for pty"))
-						if err != nil {
-							log.Println("Error " + err.Error())
-							return err
-						}
-						return nil
-					},
+					Path:   "/attach/:id",
+					Name:   "Attach to exec(pure websocket)",
+					HandleFunc: websocket.Attach,
 				},
 			},
 		},
