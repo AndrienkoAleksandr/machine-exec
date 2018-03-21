@@ -27,16 +27,23 @@ func jsonRpcGetExec(_ *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmi
 }
 
 type OperationResult struct {
-	Id   int64  `json:"id"`
+	Id   int  `json:"id"` //todo maybe string like id, or int64...
 	Text string `json:"text"`
 }
 
-//todo implement it
+type ResizeParam struct {
+	Id   int `json:"id"`
+	Cols uint `json:"cols"`
+	Rows uint `json:"rows"`
+}
+
 func jsonRpcResizeExec(_ *jsonrpc.Tunnel, params interface{}) (interface{}, error) {
-	//machine := params.(*model.MachineExec)
-	//if err := machineManager.resize(machine); err != nil {
-	//	return nil, asRPCError(err)
-	//}
+	resizeParm := params.(*ResizeParam);
+
+	if err := execManager.Resize(resizeParm.Id, resizeParm.Cols, resizeParm.Rows); err != nil {
+		//todo as jsonRpc error?
+		return nil, jsonrpc.NewArgsError(err)
+	}
 	fmt.Println("Resize with json RPC!")
 
 	return &OperationResult{Id: 123, Text: "Successfully resize"}, nil

@@ -18,3 +18,7 @@ func GetExec(w http.ResponseWriter, r *http.Request, _ rest.Params) error {
 func ResizeExec(w http.ResponseWriter, r *http.Request, _ rest.Params) error {
 	return nil
 }
+
+func KillExec(w http.ResponseWriter, r *http.Request, _ rest.Params) error {
+	return nil
+}

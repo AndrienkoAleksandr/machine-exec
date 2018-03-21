@@ -74,15 +74,17 @@ func Get(id string) {
 	fmt.Println("get")
 }
 
-func Resize(id string) error {
-	//if err := cli.ContainerExecResize(); err != nil {
-	//
-	//}
-	//fmt.Println("resize")
+func Resize(id int, cols uint, rows uint) error {
+	machineExec := execMap[id]
+
+	resizeParam := types.ResizeOptions{Height: rows, Width:cols}
+	if err := cli.ContainerExecResize(context.Background(), machineExec.ExecId, resizeParam); err != nil {
+		return  err
+	}
+	fmt.Println("resize")
 	return nil
 }
 
-//todo kill exec
 func Kill() {
 	//todo implement kill for exec
 }

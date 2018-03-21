@@ -11,22 +11,18 @@ var HTTPRoutes = rest.RoutesGroup{
 			Path:       "/machine-exec",
 			HandleFunc: CreateExec,
 		},
-		//todo
-		//{
-		//	Method:     "DELETE",
-		//	Name:       "Kill Exec",
-		//	Path:       "/process/:pid",
-		//	HandleFunc: detach,
-		//},
+		{
+			Method:     "DELETE",
+			Name:       "Kill MachineExec",
+			Path:       "/machine-exec/:pid",
+			HandleFunc:  KillExec,
+		},
 		{
 			Method:     "GET",
 			Name:       "Get MachineExec info",
 			Path:       "/machine-exec/:id",
 			HandleFunc: GetExec,
 		},
-
-		// todo think about update method... but for now we can change only exec geometry...
-		// So let be separated resize method for now...
 		{
 			Method:     "GET",
 			Name:       "Resize MachineExec",
