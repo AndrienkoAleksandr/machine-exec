@@ -1,15 +1,15 @@
-package main
+package readFileSample
 
 import (
-	"os"
-	"fmt"
 	"bufio"
+	"fmt"
+	"os"
 )
 
-func main()  {
-	fs, err := os.Open("/home/user/GoWorkSpace/src/github.com/AndrienkoAleksandr/machine-exec/api/websocket/websocket.go");
+func main() {
+	fs, err := os.Open("/home/user/GoWorkSpace/src/github.com/AndrienkoAleksandr/machine-exec/api/websocket/websocket.go")
 
-	if err != nil{
+	if err != nil {
 		fmt.Println("error reading file")
 		return
 	}
@@ -23,7 +23,7 @@ func main()  {
 	for {
 		v, _ := reader.Read(buf)
 
-		if v == 0{
+		if v == 0 {
 			return
 		}
 

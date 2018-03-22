@@ -1,26 +1,25 @@
 package main
 
 import (
-	execManager "github.com/AndrienkoAleksandr/machine-exec/exec"
-	"github.com/AndrienkoAleksandr/machine-exec/api/model"
 	"fmt"
-	"net"
+	"github.com/AndrienkoAleksandr/machine-exec/api/model"
+	execManager "github.com/AndrienkoAleksandr/machine-exec/exec"
 	"io"
+	"net"
 	"os"
 	"time"
 )
 
-
-func main()  {
-	 machineExec := model.MachineExec{
+func main() {
+	machineExec := model.MachineExec{
 		Identifier: model.MachineIdentifier{
 			MachineName: "dev-machine",
-			WsId: "workspacemru4loxoylowd537",
+			WsId:        "workspacemru4loxoylowd537",
 		},
-		Cmd: "/bin/bash",
+		Cmd:  "/bin/bash",
 		Cols: 24,
 		Rows: 80,
-		Tty: true,
+		Tty:  true,
 	}
 	id, err := execManager.Create(&machineExec)
 	if err != nil {

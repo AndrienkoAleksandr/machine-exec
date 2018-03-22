@@ -27,20 +27,20 @@ func jsonRpcGetExec(_ *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmi
 }
 
 type OperationResult struct {
-	Id   int  `json:"id"` //todo maybe string like id, or int64...
+	Id   int    `json:"id"` //todo maybe string like id, or int64...
 	Text string `json:"text"`
 }
 
 type ResizeParam struct {
-	Id   int `json:"id"`
+	Id   int  `json:"id"`
 	Cols uint `json:"cols"`
 	Rows uint `json:"rows"`
 }
 
 func jsonRpcResizeExec(_ *jsonrpc.Tunnel, params interface{}) (interface{}, error) {
-	resizeParm := params.(*ResizeParam);
+	resizeParam := params.(*ResizeParam)
 
-	if err := execManager.Resize(resizeParm.Id, resizeParm.Cols, resizeParm.Rows); err != nil {
+	if err := execManager.Resize(resizeParam.Id, resizeParam.Cols, resizeParam.Rows); err != nil {
 		//todo as jsonRpc error?
 		return nil, jsonrpc.NewArgsError(err)
 	}
@@ -50,7 +50,7 @@ func jsonRpcResizeExec(_ *jsonrpc.Tunnel, params interface{}) (interface{}, erro
 }
 
 type KillParam struct {
-	Id   int  `json:"id"`
+	Id int `json:"id"`
 }
 
 //todo implement it

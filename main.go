@@ -5,12 +5,12 @@ import (
 	"fmt"
 	jsonRpcApi "github.com/AndrienkoAleksandr/machine-exec/api/jsonrpc"
 	restApi "github.com/AndrienkoAleksandr/machine-exec/api/rest"
+	"github.com/AndrienkoAleksandr/machine-exec/api/websocket"
 	"github.com/eclipse/che/agents/go-agents/core/jsonrpc"
 	"github.com/eclipse/che/agents/go-agents/core/jsonrpc/jsonrpcws"
 	"github.com/eclipse/che/agents/go-agents/core/rest"
 	"net/http"
 	"time"
-	"github.com/AndrienkoAleksandr/machine-exec/api/websocket"
 )
 
 var (
@@ -48,9 +48,9 @@ func main() {
 					},
 				},
 				{
-					Method: "GET",
-					Path:   "/attach/:id",
-					Name:   "Attach to exec(pure websocket)",
+					Method:     "GET",
+					Path:       "/attach/:id",
+					Name:       "Attach to exec(pure websocket)",
 					HandleFunc: websocket.Attach,
 				},
 			},

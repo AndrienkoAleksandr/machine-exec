@@ -15,7 +15,7 @@ var HTTPRoutes = rest.RoutesGroup{
 			Method:     "DELETE",
 			Name:       "Kill MachineExec",
 			Path:       "/machine-exec/:pid",
-			HandleFunc:  KillExec,
+			HandleFunc: KillExec,
 		},
 		{
 			Method:     "GET",

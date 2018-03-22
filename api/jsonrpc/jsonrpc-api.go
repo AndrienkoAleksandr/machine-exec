@@ -10,7 +10,7 @@ const (
 	CreateMethod = "create"
 	GetMethod    = "get"
 	ResizeMethod = "resize"
-	KillMethod = "kill"
+	KillMethod   = "kill"
 )
 
 // Error codes.
@@ -19,6 +19,8 @@ const (
 	NoSuchProcessErrorCode   = 101
 	ProcessNotAliveErrorCode = 102
 )
+
+//TODO we need check casting for all param types!!!
 
 // RPCRoutes defines process jsonrpc routes.
 var RPCRoutes = jsonrpc.RoutesGroup{
@@ -36,7 +38,7 @@ var RPCRoutes = jsonrpc.RoutesGroup{
 		},
 		{
 			Method: ResizeMethod,
-			Decode: jsonrpc.FactoryDec(func() interface{} { return &OperationResult{} }),
+			Decode: jsonrpc.FactoryDec(func() interface{} { return &ResizeParam{} }),
 			Handle: jsonrpc.HandleRet(jsonRpcResizeExec),
 		},
 		{

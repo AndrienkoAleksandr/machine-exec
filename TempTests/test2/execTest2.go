@@ -1,25 +1,24 @@
 package main
 
 import (
-	execManager "github.com/AndrienkoAleksandr/machine-exec/exec"
-	"github.com/AndrienkoAleksandr/machine-exec/api/model"
-	"fmt"
 	"bufio"
+	"fmt"
+	"github.com/AndrienkoAleksandr/machine-exec/api/model"
+	execManager "github.com/AndrienkoAleksandr/machine-exec/exec"
 	"net"
 	"time"
 )
 
-
-func main()  {
+func main() {
 	machineExec := model.MachineExec{
 		Identifier: model.MachineIdentifier{
 			MachineName: "dev-machine",
-			WsId: "workspacemru4loxoylowd537",
+			WsId:        "workspacemru4loxoylowd537",
 		},
-		Cmd: "/bin/bash",
+		Cmd:  "/bin/bash",
 		Cols: 24,
 		Rows: 80,
-		Tty: true,
+		Tty:  true,
 	}
 	id, err := execManager.Create(&machineExec)
 	if err != nil {
@@ -38,7 +37,7 @@ func main()  {
 	readAndPrint(hiJackRepsp.Reader)
 }
 
-func readAndPrint(reader *bufio.Reader)  {
+func readAndPrint(reader *bufio.Reader) {
 	bts := make([]byte, 8192)
 	size, err := reader.Read(bts)
 	if err != nil {

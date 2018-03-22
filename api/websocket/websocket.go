@@ -1,16 +1,16 @@
 package websocket
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
-	"log"
+	execManager "github.com/AndrienkoAleksandr/machine-exec/exec"
 	"github.com/eclipse/che-lib/websocket"
 	"github.com/eclipse/che/agents/go-agents/core/rest"
-	"net/http"
-	execManager "github.com/AndrienkoAleksandr/machine-exec/exec"
-	"strconv"
-	"errors"
-	"bufio"
+	"log"
 	"net"
+	"net/http"
+	"strconv"
 )
 
 const (
@@ -27,7 +27,7 @@ var (
 )
 
 func Attach(w http.ResponseWriter, r *http.Request, restParmas rest.Params) error {
-	id, err := strconv.Atoi(restParmas.Get("id"));
+	id, err := strconv.Atoi(restParmas.Get("id"))
 	if err != nil {
 		return errors.New("Failed to parse id")
 	}
@@ -55,14 +55,14 @@ func Attach(w http.ResponseWriter, r *http.Request, restParmas rest.Params) erro
 	return nil
 }
 
-func sendClientInputToExec(hjrConn net.Conn, wsConn *websocket.Conn)  {
+func sendClientInputToExec(hjrConn net.Conn, wsConn *websocket.Conn) {
 	for {
 		msgType, wsBytes, err := wsConn.ReadMessage() //todo check websocket message type
 
 		fmt.Println("userDate='" + string(wsBytes) + "'")
 
 		if err != nil {
-			fmt.Println("failed to get read websocket message");
+			fmt.Println("failed to get read websocket message")
 			return
 		}
 
@@ -71,14 +71,15 @@ func sendClientInputToExec(hjrConn net.Conn, wsConn *websocket.Conn)  {
 		}
 
 		if hjrConn.Write(wsBytes); err != nil {
-			fmt.Println("failed to write client content to exec!!! Cause: " + err.Error());
+			fmt.Println("failed to write client content to exec!!! Cause: " + err.Error())
 			return
 		}
 	}
 }
 
-func sendExecOutPutToConnection(hjReader *bufio.Reader, wsConn *websocket.Conn)  {
-	 //deferer stop reading exec output! save place to next reading...
+// Todo RuneReader?
+func sendExecOutPutToConnection(hjReader *bufio.Reader, wsConn *websocket.Conn) {
+	//deferer stop reading exec output! save place to next reading...
 
 	//execBytes := make([]byte, bufferSize)
 	//for {
@@ -101,13 +102,13 @@ func sendExecOutPutToConnection(hjReader *bufio.Reader, wsConn *websocket.Conn) 
 
 	for {
 		runa, size, err := hjReader.ReadRune()
-		if  err != nil {
+		if err != nil {
 			fmt.Println("failed to read exec stdOut stream!!! " + err.Error())
 			return
 		}
 
 		fmt.Println("size=", size)
-		fmt.Println("exec response='" + string(runa) +"'")
+		fmt.Println("exec response='" + string(runa) + "'")
 
 		if size > 0 {
 			if err := wsConn.WriteMessage(websocket.TextMessage, []byte(string(runa))); err != nil {

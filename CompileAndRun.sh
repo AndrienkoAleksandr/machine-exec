@@ -1,5 +1,6 @@
 #!/bin/bash
 
-$(go build -o main .)
+$(go fmt ./...)
+$(CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .)
 
 ./main
