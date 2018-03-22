@@ -36,7 +36,9 @@ func Create(machineExec *model.MachineExec) (int, error) {
 		Tty:          machineExec.Tty,
 		AttachStdin:  true,
 		AttachStdout: true,
-		Cmd:          []string{machineExec.Cmd}, //todo /bin/bash -l without login ?
+		AttachStderr: true,
+		Detach:       false,                     //todo support detach exec ? Maybe for kill it would be nice...
+		Cmd:          []string{machineExec.Cmd}, // todo /bin/bash -l without login ?
 	})
 	if err != nil {
 		return -1, err
@@ -54,7 +56,10 @@ func Create(machineExec *model.MachineExec) (int, error) {
 func Attach(id int) (*types.HijackedResponse, error) {
 	machineExec := execMap[id]
 
-	hjr, err := cli.ContainerExecAttach(context.Background(), machineExec.ExecId, types.ExecStartCheck{})
+	hjr, err := cli.ContainerExecAttach(context.Background(), machineExec.ExecId, types.ExecStartCheck{
+		Detach: false, //todo support detach exec ? Maybe for kill it would be nice...
+		Tty:    machineExec.Tty,
+	})
 	if err != nil {
 		return nil, errors.New("Failed to attach to exec " + err.Error())
 	}
