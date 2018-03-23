@@ -11,10 +11,11 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"bytes"
 )
 
 const (
-	bufferSize int = 8192
+	bufferSize = 8192
 )
 
 var (
@@ -29,7 +30,7 @@ var (
 func Attach(w http.ResponseWriter, r *http.Request, restParmas rest.Params) error {
 	id, err := strconv.Atoi(restParmas.Get("id"))
 	if err != nil {
-		return errors.New("Failed to parse id")
+		return errors.New("failed to parse id")
 	}
 	fmt.Println("Parsed id", id)
 
@@ -40,7 +41,7 @@ func Attach(w http.ResponseWriter, r *http.Request, restParmas rest.Params) erro
 
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("Error " + err.Error())
+		log.Println("Unable to upgrade connection to websocket " + err.Error())
 		return err
 	}
 
@@ -57,10 +58,7 @@ func Attach(w http.ResponseWriter, r *http.Request, restParmas rest.Params) erro
 
 func sendClientInputToExec(hjrConn net.Conn, wsConn *websocket.Conn) {
 	for {
-		msgType, wsBytes, err := wsConn.ReadMessage() //todo check websocket message type
-
-		fmt.Println("userDate='" + string(wsBytes) + "'")
-
+		msgType, wsBytes, err := wsConn.ReadMessage()
 		if err != nil {
 			fmt.Println("failed to get read websocket message")
 			return
@@ -71,50 +69,39 @@ func sendClientInputToExec(hjrConn net.Conn, wsConn *websocket.Conn) {
 		}
 
 		if hjrConn.Write(wsBytes); err != nil {
-			fmt.Println("failed to write client content to exec!!! Cause: " + err.Error())
+			fmt.Println("failed to write client content to the exec!!! Cause: " + err.Error())
 			return
 		}
 	}
 }
 
-// Todo RuneReader?
 func sendExecOutPutToConnection(hjReader *bufio.Reader, wsConn *websocket.Conn) {
-	//deferer stop reading exec output! save place to next reading...
-
-	//execBytes := make([]byte, bufferSize)
-	//for {
-	//	size, err := hjReader.Read(execBytes);
-	//	hjReader.ReadByte()
-	//	if  err != nil {
-	//		fmt.Println("failed to read exec stdOut stream!!! " + err.Error())
-	//		return
-	//	}
-	//
-	//	fmt.Println("size=", size)
-	//	fmt.Println("exec response='" + string(execBytes[0:size]) +"'")
-	//
-	//	if size > 0 {
-	//		if err := wsConn.WriteMessage(websocket.TextMessage, execBytes[0:size]); err != nil {
-	//			fmt.Println("failed to write to websocket message!!!" + err.Error())
-	//		}
-	//	}
-	//}
+	buf := make([]byte, bufferSize)
+	var buffer bytes.Buffer
 
 	for {
-		runa, size, err := hjReader.ReadRune()
+		rbBize, err := hjReader.Read(buf)
 		if err != nil {
-			fmt.Println("failed to read exec stdOut stream!!! " + err.Error())
+			fmt.Println("failed to read exec stdOut/stdError stream!!! " + err.Error())
 			return
 		}
 
-		fmt.Println("size=", size)
-		fmt.Println("exec response='" + string(runa) + "'")
+		i, err := normalizeBuffer(&buffer, buf, rbBize)
+		if err != nil {
+			log.Printf("Couldn't normalize byte buffer to UTF-8 sequence, due to an error: %s", err.Error())
+			return
+		}
 
-		if size > 0 {
-			if err := wsConn.WriteMessage(websocket.TextMessage, []byte(string(runa))); err != nil {
+		if rbBize > 0 {
+			if err := wsConn.WriteMessage(websocket.TextMessage, buffer.Bytes()); err != nil {
 				fmt.Println("failed to write to websocket message!!!" + err.Error())
 				return
 			}
+		}
+
+		buffer.Reset()
+		if i < rbBize {
+			buffer.Write(buf[i:rbBize])
 		}
 	}
 }
