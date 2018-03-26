@@ -43,9 +43,7 @@ var RPCRoutes = jsonrpc.RoutesGroup{
 		},
 		{
 			Method: KillMethod,
-			Decode: jsonrpc.FactoryDec(func() interface{} {
-				return &OperationResult{}
-			}),
+			Decode: jsonrpc.FactoryDec(func() interface{} { return &OperationResult{} }),
 			Handle: jsonrpc.HandleRet(jsonRpcKillExec),
 		},
 	},

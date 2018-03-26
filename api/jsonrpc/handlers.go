@@ -55,6 +55,7 @@ type KillParam struct {
 
 //todo implement it
 func jsonRpcKillExec(_ *jsonrpc.Tunnel, params interface{}) (interface{}, error) {
+	execManager.Kill();
 	fmt.Println("Kill with json RPC!")
 	return nil, nil
 }

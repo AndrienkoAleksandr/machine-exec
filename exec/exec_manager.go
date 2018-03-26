@@ -8,6 +8,7 @@ import (
 	"github.com/docker/docker/client"
 	"golang.org/x/net/context"
 	"sync/atomic"
+	"strconv"
 )
 
 var (
@@ -68,6 +69,8 @@ func Attach(id int) (*types.HijackedResponse, error) {
 	return &hjr, nil
 }
 
+
+
 func Get(id string) {
 	// todo implement method get
 	fmt.Println("get")
@@ -84,6 +87,27 @@ func Resize(id int, cols uint, rows uint) error {
 	return nil
 }
 
-func Kill() {
+func Kill(id int) error {
+	machineExec := execMap[id];
+
+	execInspec, err := cli.ContainerExecInspect(context.Background(), machineExec.ExecId)
+	if err != nil {
+		return err
+	}
+
+	pid := execInspec.Pid;
+	//cmd := [3]string{"kill", "SIGHUP", strconv.Itoa(pid)}
+
+	killMachineExec := model.MachineExec {
+		Identifier: model.MachineIdentifier{
+			WsId: machineExec.Identifier.WsId,
+			MachineName: machineExec.Identifier.MachineName,
+		},
+		Tty:false,
+		Cmd: "kill SIGHUP " + strconv.Itoa(pid),
+	}
+
+	Create(&killMachineExec)
+
 	//todo implement kill for exec
 }
