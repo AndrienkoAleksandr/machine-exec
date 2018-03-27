@@ -1,10 +1,10 @@
 package websocket
 
 import (
-	"bytes"
 	"bufio"
-	"unicode/utf8"
+	"bytes"
 	"log"
+	"unicode/utf8"
 )
 
 // read byte array as Unicode code points (rune in go)
@@ -31,4 +31,3 @@ func normalizeBuffer(normalizedBuf *bytes.Buffer, buf []byte, n int) (int, error
 	}
 	return i, nil
 }
-

@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	execManager "github.com/AndrienkoAleksandr/machine-exec/exec"
@@ -11,7 +12,6 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"bytes"
 )
 
 const (

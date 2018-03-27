@@ -7,7 +7,7 @@ type MachineIdentifier struct {
 
 type MachineExec struct {
 	Identifier MachineIdentifier `json:"identifier"`
-	Cmd        string            `json:"cmd"`
+	Cmd        []string          `json:"cmd"`
 	Tty        bool              `json:"tty"`
 	Cols       int               `json:"cols"`
 	Rows       int               `json:"rows"`

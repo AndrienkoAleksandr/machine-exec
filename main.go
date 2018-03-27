@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	jsonRpcApi "github.com/AndrienkoAleksandr/machine-exec/api/jsonrpc"
 	restApi "github.com/AndrienkoAleksandr/machine-exec/api/rest"
 	"github.com/AndrienkoAleksandr/machine-exec/api/websocket"
@@ -25,7 +24,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	//todo apply exec-machine context again
+	//todo apply exec-machine context
 
 	appRoutes := []rest.RoutesGroup{
 		restApi.HTTPRoutes,
@@ -35,9 +34,8 @@ func main() {
 				{
 					Method: "GET",
 					Path:   "/connect",
-					Name:   "Connect to MachineExec api(websocket)",
+					Name:   "MachineExec api end point(websocket)",
 					HandleFunc: func(w http.ResponseWriter, r *http.Request, _ rest.Params) error {
-						fmt.Println("Connected to the MachineExec json-rpc")
 						conn, err := jsonrpcws.Upgrade(w, r)
 						if err != nil {
 							return err

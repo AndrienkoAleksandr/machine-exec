@@ -14,13 +14,11 @@ const (
 )
 
 // Error codes.
-const (
-	ProcessAPIErrorCode      = 100
-	NoSuchProcessErrorCode   = 101
-	ProcessNotAliveErrorCode = 102
-)
-
-//TODO we need check casting for all param types!!!
+//const (
+//	ProcessAPIErrorCode      = 100
+//	NoSuchProcessErrorCode   = 101
+//	ProcessNotAliveErrorCode = 102
+//)
 
 // RPCRoutes defines process jsonrpc routes.
 var RPCRoutes = jsonrpc.RoutesGroup{
@@ -33,7 +31,7 @@ var RPCRoutes = jsonrpc.RoutesGroup{
 		},
 		{
 			Method: GetMethod,
-			Decode: jsonrpc.FactoryDec(func() interface{} { return &model.MachineExec{} }),
+			Decode: jsonrpc.FactoryDec(func() interface{} { return &IdParam{} }),
 			Handle: jsonRpcGetExec,
 		},
 		{
@@ -43,7 +41,7 @@ var RPCRoutes = jsonrpc.RoutesGroup{
 		},
 		{
 			Method: KillMethod,
-			Decode: jsonrpc.FactoryDec(func() interface{} { return &OperationResult{} }),
+			Decode: jsonrpc.FactoryDec(func() interface{} { return &IdParam{} }),
 			Handle: jsonrpc.HandleRet(jsonRpcKillExec),
 		},
 	},

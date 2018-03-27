@@ -7,8 +7,9 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"golang.org/x/net/context"
-	"sync/atomic"
 	"strconv"
+	"sync/atomic"
+	"syscall"
 )
 
 var (
@@ -38,8 +39,8 @@ func Create(machineExec *model.MachineExec) (int, error) {
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
-		Detach:       false,                     //todo support detach exec ? Maybe for kill it would be nice...
-		Cmd:          []string{machineExec.Cmd}, // todo /bin/bash -l without login ?
+		Detach:       false,           //todo support detach exec ? Maybe for kill it would be nice...
+		Cmd:          machineExec.Cmd, // todo /bin/bash -l without login ?
 	})
 	if err != nil {
 		return -1, err
@@ -51,11 +52,16 @@ func Create(machineExec *model.MachineExec) (int, error) {
 	id := int(atomic.AddUint64(&prevExecID, 1))
 	execMap[id] = *machineExec
 
+	fmt.Println("Create exec ", machineExec.ID)
+
 	return id, nil
 }
 
 func Attach(id int) (*types.HijackedResponse, error) {
 	machineExec := execMap[id]
+	if &machineExec == nil {
+		return nil, errors.New("Exec '" + strconv.Itoa(id) + "' to attach was not found")
+	}
 
 	hjr, err := cli.ContainerExecAttach(context.Background(), machineExec.ExecId, types.ExecStartCheck{
 		Detach: false, //todo support detach exec ? Maybe for kill it would be nice...
@@ -64,50 +70,73 @@ func Attach(id int) (*types.HijackedResponse, error) {
 	if err != nil {
 		return nil, errors.New("Failed to attach to exec " + err.Error())
 	}
-	fmt.Println("attached!!!")
+	fmt.Println("attach to exec")
 
 	return &hjr, nil
 }
 
+func Get(id int) (*model.MachineExec, error) {
+	machineExec := execMap[id]
+	if &machineExec == nil {
+		return nil, errors.New("Exec '" + strconv.Itoa(id) + "' was not found")
+	}
 
+	fmt.Println("get exec info")
 
-func Get(id string) {
-	// todo implement method get
-	fmt.Println("get")
+	return &machineExec, nil
 }
 
 func Resize(id int, cols uint, rows uint) error {
 	machineExec := execMap[id]
+	if &machineExec == nil {
+		return errors.New("Exec to resize '" + strconv.Itoa(id) + "' was not found")
+	}
 
 	resizeParam := types.ResizeOptions{Height: rows, Width: cols}
 	if err := cli.ContainerExecResize(context.Background(), machineExec.ExecId, resizeParam); err != nil {
 		return err
 	}
+
 	fmt.Println("resize")
+
 	return nil
 }
 
 func Kill(id int) error {
-	machineExec := execMap[id];
+	machineExec := execMap[id]
+	if &machineExec == nil {
+		return errors.New("Exec to kill '" + strconv.Itoa(id) + "' was not found")
+	}
 
-	execInspec, err := cli.ContainerExecInspect(context.Background(), machineExec.ExecId)
+	execInspect, err := cli.ContainerExecInspect(context.Background(), machineExec.ExecId)
 	if err != nil {
 		return err
 	}
 
-	pid := execInspec.Pid;
-	//cmd := [3]string{"kill", "SIGHUP", strconv.Itoa(pid)}
-
-	killMachineExec := model.MachineExec {
-		Identifier: model.MachineIdentifier{
-			WsId: machineExec.Identifier.WsId,
-			MachineName: machineExec.Identifier.MachineName,
-		},
-		Tty:false,
-		Cmd: "kill SIGHUP " + strconv.Itoa(pid),
+	if !execInspect.Running {
+		return errors.New("Exec with id '" + strconv.Itoa(id) + "' has already terminated")
 	}
 
-	Create(&killMachineExec)
+	pid := execInspect.Pid
+	if err := syscall.Kill(-pid, syscall.SIGHUP); err != nil {
+		return err
+	}
+	// todo send SIGHUP for pty execs, and sent SIGINT for all another execs.
+	//killCommand := []string{"kill", "-" + syscall.SIGHUP.String(), strconv.Itoa(pid)}
+	//killMachineExec := model.MachineExec{
+	//	Identifier: model.MachineIdentifier{
+	//		WsId:        machineExec.Identifier.WsId,
+	//		MachineName: machineExec.Identifier.MachineName,
+	//	},
+	//	Tty: false,
+	//	Cmd: killCommand,
+	//}
 
-	//todo implement kill for exec
+	// _, err = Create(&killMachineExec)
+	//if err != nil {
+	//	return err
+	//}
+	// todo check if exec was really terminated, if not => kill by SIGKILL...
+
+	return nil
 }
