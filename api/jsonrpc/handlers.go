@@ -9,11 +9,11 @@ import (
 )
 
 type IdParam struct {
-	Id int `json:"id"`//todo maybe string like id, or int64...
+	Id int `json:"id"` //todo maybe string like id, or int64...
 }
 
 type OperationResult struct {
-	Id int `json:"id"`
+	Id   int    `json:"id"`
 	Text string `json:"text"`
 }
 
@@ -33,14 +33,6 @@ func jsonRpcCreateExec(_ *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTran
 	}
 
 	t.Send(execId)
-}
-
-func jsonRpcGetExec(_ *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmitter) {
-	machineExec := params.(*IdParam)
-
-	fmt.Println("Get with json RPC!")
-
-	t.Send(machineExec)
 }
 
 func jsonRpcResizeExec(_ *jsonrpc.Tunnel, params interface{}) (interface{}, error) {

@@ -30,11 +30,6 @@ var RPCRoutes = jsonrpc.RoutesGroup{
 			Handle: jsonRpcCreateExec,
 		},
 		{
-			Method: GetMethod,
-			Decode: jsonrpc.FactoryDec(func() interface{} { return &IdParam{} }),
-			Handle: jsonRpcGetExec,
-		},
-		{
 			Method: ResizeMethod,
 			Decode: jsonrpc.FactoryDec(func() interface{} { return &ResizeParam{} }),
 			Handle: jsonrpc.HandleRet(jsonRpcResizeExec),

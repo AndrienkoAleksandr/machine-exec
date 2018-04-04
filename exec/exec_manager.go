@@ -8,13 +8,21 @@ import (
 	"github.com/docker/docker/client"
 	"golang.org/x/net/context"
 	"strconv"
+	"sync"
 	"sync/atomic"
-	"syscall"
 )
 
+type MachineExecs struct {
+	mutex   *sync.Mutex
+	execMap map[int]model.MachineExec
+}
+
 var (
-	cli               = createDockerClient()
-	execMap           = make(map[int]model.MachineExec) // todo think about multi-threads!!!
+	cli          = createDockerClient()
+	machineExecs = MachineExecs{
+		mutex:   &sync.Mutex{},
+		execMap: make(map[int]model.MachineExec),
+	}
 	prevExecID uint64 = 0
 )
 
@@ -26,6 +34,7 @@ func createDockerClient() *client.Client {
 	return cli
 }
 
+//todo don't allow to connect in the current container!!!!
 func Create(machineExec *model.MachineExec) (int, error) {
 	container, err := findMachineContainer(&machineExec.Identifier)
 	if err != nil {
@@ -50,7 +59,10 @@ func Create(machineExec *model.MachineExec) (int, error) {
 
 	//generate unique id
 	id := int(atomic.AddUint64(&prevExecID, 1))
-	execMap[id] = *machineExec
+
+	defer machineExecs.mutex.Unlock()
+	machineExecs.mutex.Lock()
+	machineExecs.execMap[id] = *machineExec
 
 	fmt.Println("Create exec ", machineExec.ID)
 
@@ -58,7 +70,7 @@ func Create(machineExec *model.MachineExec) (int, error) {
 }
 
 func Attach(id int) (*types.HijackedResponse, error) {
-	machineExec := execMap[id]
+	machineExec := getById(id)
 	if &machineExec == nil {
 		return nil, errors.New("Exec '" + strconv.Itoa(id) + "' to attach was not found")
 	}
@@ -75,19 +87,8 @@ func Attach(id int) (*types.HijackedResponse, error) {
 	return &hjr, nil
 }
 
-func Get(id int) (*model.MachineExec, error) {
-	machineExec := execMap[id]
-	if &machineExec == nil {
-		return nil, errors.New("Exec '" + strconv.Itoa(id) + "' was not found")
-	}
-
-	fmt.Println("get exec info")
-
-	return &machineExec, nil
-}
-
 func Resize(id int, cols uint, rows uint) error {
-	machineExec := execMap[id]
+	machineExec := getById(id)
 	if &machineExec == nil {
 		return errors.New("Exec to resize '" + strconv.Itoa(id) + "' was not found")
 	}
@@ -103,7 +104,7 @@ func Resize(id int, cols uint, rows uint) error {
 }
 
 func Kill(id int) error {
-	machineExec := execMap[id]
+	machineExec := getById(id)
 	if &machineExec == nil {
 		return errors.New("Exec to kill '" + strconv.Itoa(id) + "' was not found")
 	}
@@ -117,11 +118,13 @@ func Kill(id int) error {
 		return errors.New("Exec with id '" + strconv.Itoa(id) + "' has already terminated")
 	}
 
-	pid := execInspect.Pid
-	if err := syscall.Kill(-pid, syscall.SIGHUP); err != nil {
-		return err
-	}
-	// todo send SIGHUP for pty execs, and sent SIGINT for all another execs.
+	// tood exec it's external process. It's not located inside container. And we don't know child process id.
+	// Need some workaround to get process id and kill it by another exec.
+	//pid := execInspect.Pid
+	//if err := syscall.Kill(-pid, syscall.SIGHUP); err != nil {
+	//	return err
+	//}
+	// send SIGHUP for pty execs, and sent SIGINT for all another execs.
 	//killCommand := []string{"kill", "-" + syscall.SIGHUP.String(), strconv.Itoa(pid)}
 	//killMachineExec := model.MachineExec{
 	//	Identifier: model.MachineIdentifier{
@@ -136,7 +139,14 @@ func Kill(id int) error {
 	//if err != nil {
 	//	return err
 	//}
-	// todo check if exec was really terminated, if not => kill by SIGKILL...
+	// check if exec was really terminated, if not => kill by SIGKILL...
 
 	return nil
+}
+
+func getById(id int) model.MachineExec {
+	defer machineExecs.mutex.Unlock()
+
+	machineExecs.mutex.Lock()
+	return machineExecs.execMap[id]
 }
