@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"github.com/docker/docker/api/types/container"
 )
 
 type MachineExecs struct {
@@ -41,6 +42,8 @@ func Create(machineExec *model.MachineExec) (int, error) {
 		return -1, err
 	}
 
+	applyCmdKillIdentifier(machineExec)
+
 	fmt.Println("found container for creation exec! id=", container.ID)
 
 	resp, err := cli.ContainerExecCreate(context.Background(), container.ID, types.ExecConfig{
@@ -56,6 +59,7 @@ func Create(machineExec *model.MachineExec) (int, error) {
 	}
 
 	machineExec.ExecId = resp.ID
+	fmt.Println(">>>>>>>>>>EXEC ID", machineExec.ExecId)
 
 	//generate unique id
 	id := int(atomic.AddUint64(&prevExecID, 1))
@@ -149,4 +153,40 @@ func getById(id int) model.MachineExec {
 
 	machineExecs.mutex.Lock()
 	return machineExecs.execMap[id]
+}
+
+func sendKillExec(execId string, killName string) (error) {
+	return nil
+}
+
+func findPidByCmd() (error, string){
+	return nil, ""
+}
+
+func Top(execId string, args []string) (error, *container.ContainerTopOKBody)  {
+	topResBody, err := cli.ContainerTop(context.Background(), execId, args)
+	if err != nil {
+		return err, nil
+	}
+	return nil, &topResBody;
+}
+
+// Returns running bool value in case if second argument is OK, and false otherwise
+func ExecIsAlive(execId string) (bool, bool)  {
+	if result, err := cli.ContainerExecInspect(context.Background(), execId); err == nil {
+		fmt.Println("PID", result.Pid)
+		return result.Running, true;
+	}
+
+	return false, false
+}
+
+func applyCmdKillIdentifier(machineExec *model.MachineExec) {
+	cmd := machineExec.Cmd
+
+	if machineExec.Tty {
+		cmdModified := "echo " + strconv.Itoa(machineExec.ID) + " > /dev/null && " + cmd[0] + " #1"// todo rework array !
+
+		machineExec.Cmd = []string{"bash", "-c", cmdModified};
+	}
 }

@@ -15,7 +15,7 @@ func main() {
 			MachineName: "dev-machine",
 			WsId:        "workspacemru4loxoylowd537",
 		},
-		Cmd:  "/bin/bash",
+		Cmd:  []string{"/bin/bash"},
 		Cols: 24,
 		Rows: 80,
 		Tty:  true,
