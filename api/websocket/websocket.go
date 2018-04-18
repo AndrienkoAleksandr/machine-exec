@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"github.com/AndrienkoAleksandr/machine-exec/line-buffer"
 )
 
 const (
@@ -34,7 +35,7 @@ func Attach(w http.ResponseWriter, r *http.Request, restParmas rest.Params) erro
 	}
 	fmt.Println("Parsed id", id)
 
-	hjr, err := execManager.Attach(id)
+	machineExec, err := execManager.Attach(id)
 	if err != nil {
 		return err
 	}
@@ -45,13 +46,14 @@ func Attach(w http.ResponseWriter, r *http.Request, restParmas rest.Params) erro
 		return err
 	}
 
-	hjrConn := hjr.Conn
-	hjrReader := hjr.Reader
+	hjrConn := machineExec.Hjr.Conn
+	hjrReader := machineExec.Hjr.Reader
 
-	defer hjrConn.Close()
+	restoreContent := machineExec.Buffer.GetContent()
+	wsConn.WriteMessage(websocket.TextMessage, []byte(restoreContent))
 
 	go sendClientInputToExec(hjrConn, wsConn)
-	sendExecOutPutToConnection(hjrReader, wsConn)
+	sendExecOutPutToConnection(&machineExec.Buffer, hjrReader, wsConn)
 
 	return nil
 }
@@ -75,7 +77,7 @@ func sendClientInputToExec(hjrConn net.Conn, wsConn *websocket.Conn) {
 	}
 }
 
-func sendExecOutPutToConnection(hjReader *bufio.Reader, wsConn *websocket.Conn) {
+func sendExecOutPutToConnection(restoreBuffer *line_buffer.LineRingBuffer, hjReader *bufio.Reader, wsConn *websocket.Conn) {
 	buf := make([]byte, bufferSize)
 	var buffer bytes.Buffer
 
@@ -86,13 +88,14 @@ func sendExecOutPutToConnection(hjReader *bufio.Reader, wsConn *websocket.Conn) 
 			return
 		}
 
-		i, err := normalizeBuffer(&buffer, buf, rbBize)
+		i, err := normalizeBuffer(&buffer, buf, rbBize) // todo bufio.runeReader
 		if err != nil {
 			log.Printf("Couldn't normalize byte buffer to UTF-8 sequence, due to an error: %s", err.Error())
 			return
 		}
 
 		if rbBize > 0 {
+			restoreBuffer.Write(buffer.Bytes()) // save data to buffer to restore
 			if err := wsConn.WriteMessage(websocket.TextMessage, buffer.Bytes()); err != nil {
 				fmt.Println("failed to write to websocket message!!!" + err.Error())
 				return

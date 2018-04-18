@@ -10,24 +10,46 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"github.com/AndrienkoAleksandr/machine-exec/line-buffer"
 )
 
 type MachineExecs struct {
 	mutex   *sync.Mutex
-	execMap map[int]model.MachineExec
+	execMap map[int]*model.MachineExec
 }
 
 var (
 	cli          = createDockerClient()
 	machineExecs = MachineExecs{
 		mutex:   &sync.Mutex{},
-		execMap: make(map[int]model.MachineExec),
+		execMap: make(map[int]*model.MachineExec),
 	}
 	prevExecID uint64 = 0
 )
 
+// todo
+//func init() {
+//	body, err := cli.Events(context.Background(), types.EventsOptions{})
+//	if err != nil {
+//		fmt.Println(err)
+//	}
+//
+//	for {
+//		select {
+//		case err := <- err:
+//			println(err)
+//		case res := <- body:
+//			fmt.Println(res)
+//		default:
+//			timer2 := time.NewTimer(5 * time.Second)
+//			<-timer2.C
+//			fmt.Println("default")
+//		}
+//	}
+//}
+
 func createDockerClient() *client.Client {
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts()//client.NewEnvClient()
 	if err != nil {
 		panic(err)
 	}
@@ -55,36 +77,48 @@ func Create(machineExec *model.MachineExec) (int, error) {
 		return -1, err
 	}
 
-	machineExec.ExecId = resp.ID
-
-	//generate unique id
-	id := int(atomic.AddUint64(&prevExecID, 1))
-
 	defer machineExecs.mutex.Unlock()
 	machineExecs.mutex.Lock()
-	machineExecs.execMap[id] = *machineExec
 
-	fmt.Println("Create exec ", machineExec.ID)
+	machineExec.ExecId = resp.ID
+	machineExec.ID = int(atomic.AddUint64(&prevExecID, 1))
+	machineExec.Buffer = line_buffer.CreateNewLineRingBuffer()
 
-	return id, nil
+	machineExecs.execMap[machineExec.ID] = machineExec
+
+	fmt.Println("Create exec ", machineExec.ID, "execId", machineExec.ExecId)
+
+	return machineExec.ID, nil
 }
 
-func Attach(id int) (*types.HijackedResponse, error) {
+func Check(id int) (int, error)  {
+	machineExec := getById(id)
+	if &machineExec == nil {
+		return -1, errors.New("Exec '" + strconv.Itoa(id) + "' was not found")
+	}
+	return machineExec.ID, nil
+}
+
+func Attach(id int) (*model.MachineExec, error) {
 	machineExec := getById(id)
 	if &machineExec == nil {
 		return nil, errors.New("Exec '" + strconv.Itoa(id) + "' to attach was not found")
 	}
 
+	if machineExec.Hjr != nil {
+		return machineExec, nil
+	}
+
 	hjr, err := cli.ContainerExecAttach(context.Background(), machineExec.ExecId, types.ExecStartCheck{
-		Detach: false, //todo support detach exec ? Maybe for kill it would be nice...
+		Detach: false,
 		Tty:    machineExec.Tty,
 	})
 	if err != nil {
 		return nil, errors.New("Failed to attach to exec " + err.Error())
 	}
-	fmt.Println("attach to exec")
+	machineExec.Hjr = &hjr
 
-	return &hjr, nil
+	return machineExec, nil
 }
 
 func Resize(id int, cols uint, rows uint) error {
@@ -103,48 +137,7 @@ func Resize(id int, cols uint, rows uint) error {
 	return nil
 }
 
-func Kill(id int) error {
-	machineExec := getById(id)
-	if &machineExec == nil {
-		return errors.New("Exec to kill '" + strconv.Itoa(id) + "' was not found")
-	}
-
-	execInspect, err := cli.ContainerExecInspect(context.Background(), machineExec.ExecId)
-	if err != nil {
-		return err
-	}
-
-	if !execInspect.Running {
-		return errors.New("Exec with id '" + strconv.Itoa(id) + "' has already terminated")
-	}
-
-	// tood exec it's external process. It's not located inside container. And we don't know child process id.
-	// Need some workaround to get process id and kill it by another exec.
-	//pid := execInspect.Pid
-	//if err := syscall.Kill(-pid, syscall.SIGHUP); err != nil {
-	//	return err
-	//}
-	// send SIGHUP for pty execs, and sent SIGINT for all another execs.
-	//killCommand := []string{"kill", "-" + syscall.SIGHUP.String(), strconv.Itoa(pid)}
-	//killMachineExec := model.MachineExec{
-	//	Identifier: model.MachineIdentifier{
-	//		WsId:        machineExec.Identifier.WsId,
-	//		MachineName: machineExec.Identifier.MachineName,
-	//	},
-	//	Tty: false,
-	//	Cmd: killCommand,
-	//}
-
-	// _, err = Create(&killMachineExec)
-	//if err != nil {
-	//	return err
-	//}
-	// check if exec was really terminated, if not => kill by SIGKILL...
-
-	return nil
-}
-
-func getById(id int) model.MachineExec {
+func getById(id int) *model.MachineExec {
 	defer machineExecs.mutex.Unlock()
 
 	machineExecs.mutex.Lock()

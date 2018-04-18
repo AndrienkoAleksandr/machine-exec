@@ -1,4 +1,4 @@
-package readFileSample
+package main
 
 import (
 	"bufio"
@@ -7,10 +7,10 @@ import (
 )
 
 func main() {
-	fs, err := os.Open("/home/user/GoWorkSpace/src/github.com/AndrienkoAleksandr/machine-exec/api/websocket/websocket.go")
+	fs, err := os.Open("TempTests/readFileSample/readFileExample.go")
 
 	if err != nil {
-		fmt.Println("error reading file")
+		fmt.Println("error reading file", err.Error())
 		return
 	}
 

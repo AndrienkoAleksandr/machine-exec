@@ -12,10 +12,10 @@ import (
 func main() {
 	machineExec := model.MachineExec{
 		Identifier: model.MachineIdentifier{
-			MachineName: "dev-machine",
-			WsId:        "workspacemru4loxoylowd537",
+			MachineName: "dev",
+			WsId:        "workspacecs82k5zp6jyv86fs",
 		},
-		Cmd:  "/bin/bash",
+		Cmd:  []string{"/bin/bash"},
 		Cols: 24,
 		Rows: 80,
 		Tty:  true,
@@ -24,10 +24,12 @@ func main() {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	hiJackRepsp, err := execManager.Attach(id)
+	machineExecFilled, err := execManager.Attach(id)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+
+	hiJackRepsp := machineExecFilled.Hjr
 
 	readAndPrint(hiJackRepsp.Reader)
 	writeToExec(hiJackRepsp.Conn)

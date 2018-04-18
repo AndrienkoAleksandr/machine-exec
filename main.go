@@ -34,7 +34,7 @@ func main() {
 				{
 					Method: "GET",
 					Path:   "/connect",
-					Name:   "MachineExec api end point(websocket)",
+					Name:   "MachineExec api end point(websocket)", // json-rpc
 					HandleFunc: func(w http.ResponseWriter, r *http.Request, _ rest.Params) error {
 						conn, err := jsonrpcws.Upgrade(w, r)
 						if err != nil {

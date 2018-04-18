@@ -8,12 +8,11 @@ import (
 // Constants that represent RPC methods identifiers.
 const (
 	CreateMethod = "create"
-	GetMethod    = "get"
+	CheckMethod    = "check"
 	ResizeMethod = "resize"
-	KillMethod   = "kill"
 )
 
-// Error codes.
+// todo Error codes.
 //const (
 //	ProcessAPIErrorCode      = 100
 //	NoSuchProcessErrorCode   = 101
@@ -30,14 +29,14 @@ var RPCRoutes = jsonrpc.RoutesGroup{
 			Handle: jsonRpcCreateExec,
 		},
 		{
+			Method: CheckMethod,
+			Decode: jsonrpc.FactoryDec(func() interface{} { return &IdParam{} }),
+			Handle: jsonRpcCheckExec,
+		},
+		{
 			Method: ResizeMethod,
 			Decode: jsonrpc.FactoryDec(func() interface{} { return &ResizeParam{} }),
 			Handle: jsonrpc.HandleRet(jsonRpcResizeExec),
-		},
-		{
-			Method: KillMethod,
-			Decode: jsonrpc.FactoryDec(func() interface{} { return &IdParam{} }),
-			Handle: jsonrpc.HandleRet(jsonRpcKillExec),
 		},
 	},
 }

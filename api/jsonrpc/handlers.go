@@ -27,12 +27,23 @@ type ResizeParam struct {
 func jsonRpcCreateExec(_ *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmitter) {
 	machineExec := params.(*model.MachineExec)
 
-	execId, err := execManager.Create(machineExec)
+	id, err := execManager.Create(machineExec)
 	if err != nil {
 		t.SendError(jsonrpc.NewArgsError(err))
 	}
 
-	t.Send(execId)
+	t.Send(id)
+}
+
+func jsonRpcCheckExec(_ *jsonrpc.Tunnel, params interface{}, t jsonrpc.RespTransmitter) {
+	idParam := params.(*IdParam)
+
+	id, err := execManager.Check(idParam.Id)
+	if err != nil {
+		t.SendError(jsonrpc.NewArgsError(err))
+	}
+
+	t.Send(id)
 }
 
 func jsonRpcResizeExec(_ *jsonrpc.Tunnel, params interface{}) (interface{}, error) {
@@ -45,21 +56,5 @@ func jsonRpcResizeExec(_ *jsonrpc.Tunnel, params interface{}) (interface{}, erro
 
 	return &OperationResult{
 		Id: resizeParam.Id, Text: "Exec with id " + strconv.Itoa(resizeParam.Id) + "  was successfully resized",
-	}, nil
-}
-
-func jsonRpcKillExec(_ *jsonrpc.Tunnel, params interface{}) (interface{}, error) {
-	idParam := params.(*IdParam)
-
-	err := execManager.Kill(idParam.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println("Kill with json RPC!")
-
-	return &OperationResult{
-		Id:   idParam.Id,
-		Text: "Exec with id '" + strconv.Itoa(idParam.Id) + "' was successfully killed",
 	}, nil
 }

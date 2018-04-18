@@ -4,19 +4,19 @@ import (
 	"fmt"
 	"github.com/AndrienkoAleksandr/machine-exec/api/model"
 	execManager "github.com/AndrienkoAleksandr/machine-exec/exec"
-	"io"
 	"net"
-	"os"
 	"time"
+	"io"
+	"os"
 )
 
 func main() {
 	machineExec := model.MachineExec{
 		Identifier: model.MachineIdentifier{
-			MachineName: "dev-machine",
-			WsId:        "workspacemru4loxoylowd537",
+			MachineName: "dev",
+			WsId:        "workspacecs82k5zp6jyv86fs",
 		},
-		Cmd:  "/bin/bash",
+		Cmd:  []string{"/bin/bash"},
 		Cols: 24,
 		Rows: 80,
 		Tty:  true,
@@ -25,22 +25,35 @@ func main() {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	hiJackRepsp, err := execManager.Attach(id)
+	machineExecFilled, err := execManager.Attach(id)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
-	writeToExec(hiJackRepsp.Conn)
+	hjr := machineExecFilled.Hjr
+
+
+	writeToExec(hjr.Conn)
 
 	go func() {
-		io.Copy(os.Stdout, hiJackRepsp.Reader)
+		io.Copy(os.Stdout, hjr.Reader)
 	}()
 
+
 	timer1 := time.NewTimer(2 * time.Second)
+	bst, _, _  := hjr.Reader.ReadLine()
+	fmt.Println(string(bst))
+
 	<-timer1.C
-	hiJackRepsp.Conn.Close()
-	hiJackRepsp.Close()
-	hiJackRepsp.CloseWrite()
+	timer2 := time.NewTimer(2 * time.Second)
+
+	bst2, _, _  := hjr.Reader.ReadLine()
+	fmt.Println(string(bst2))
+
+	<-timer2.C
+	hjr.Conn.Close()
+	hjr.Close()
+	hjr.CloseWrite()
 }
 
 func writeToExec(hjrConn net.Conn) {
