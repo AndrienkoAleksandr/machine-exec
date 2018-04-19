@@ -11,6 +11,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"github.com/AndrienkoAleksandr/machine-exec/line-buffer"
+	"github.com/eclipse/che-lib/websocket"
 )
 
 type MachineExecs struct {
@@ -27,29 +28,8 @@ var (
 	prevExecID uint64 = 0
 )
 
-// todo
-//func init() {
-//	body, err := cli.Events(context.Background(), types.EventsOptions{})
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//
-//	for {
-//		select {
-//		case err := <- err:
-//			println(err)
-//		case res := <- body:
-//			fmt.Println(res)
-//		default:
-//			timer2 := time.NewTimer(5 * time.Second)
-//			<-timer2.C
-//			fmt.Println("default")
-//		}
-//	}
-//}
-
 func createDockerClient() *client.Client {
-	cli, err := client.NewClientWithOpts()//client.NewEnvClient()
+	cli, err := client.NewClientWithOpts()
 	if err != nil {
 		panic(err)
 	}
@@ -70,8 +50,8 @@ func Create(machineExec *model.MachineExec) (int, error) {
 		AttachStdin:  true,
 		AttachStdout: true,
 		AttachStderr: true,
-		Detach:       false,           //todo support detach exec ? Maybe for kill it would be nice...
-		Cmd:          machineExec.Cmd, // todo /bin/bash -l without login ?
+		Detach:       false,
+		Cmd:          machineExec.Cmd,
 	})
 	if err != nil {
 		return -1, err
@@ -83,6 +63,9 @@ func Create(machineExec *model.MachineExec) (int, error) {
 	machineExec.ExecId = resp.ID
 	machineExec.ID = int(atomic.AddUint64(&prevExecID, 1))
 	machineExec.Buffer = line_buffer.CreateNewLineRingBuffer()
+	machineExec.MsgChan = make(chan []byte)
+	machineExec.WsConnsLock = &sync.Mutex{}
+	machineExec.WsConns = make([]*websocket.Conn, 0)
 
 	machineExecs.execMap[machineExec.ID] = machineExec
 
@@ -93,7 +76,7 @@ func Create(machineExec *model.MachineExec) (int, error) {
 
 func Check(id int) (int, error)  {
 	machineExec := getById(id)
-	if &machineExec == nil {
+	if machineExec == nil {
 		return -1, errors.New("Exec '" + strconv.Itoa(id) + "' was not found")
 	}
 	return machineExec.ID, nil
@@ -101,7 +84,7 @@ func Check(id int) (int, error)  {
 
 func Attach(id int) (*model.MachineExec, error) {
 	machineExec := getById(id)
-	if &machineExec == nil {
+	if machineExec == nil {
 		return nil, errors.New("Exec '" + strconv.Itoa(id) + "' to attach was not found")
 	}
 
@@ -123,7 +106,7 @@ func Attach(id int) (*model.MachineExec, error) {
 
 func Resize(id int, cols uint, rows uint) error {
 	machineExec := getById(id)
-	if &machineExec == nil {
+	if machineExec == nil {
 		return errors.New("Exec to resize '" + strconv.Itoa(id) + "' was not found")
 	}
 

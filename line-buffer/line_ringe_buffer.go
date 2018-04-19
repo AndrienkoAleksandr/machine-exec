@@ -61,7 +61,7 @@ func (lineBuff *LineRingBuffer) GetContent() string {
 	return buffer.String()
 }
 
-func (lineBuff LineRingBuffer) shouldContinueLastRing(lastRing *ring.Ring, nextText string) bool  {
+func (lineBuff *LineRingBuffer) shouldContinueLastRing(lastRing *ring.Ring, nextText string) bool  {
 	if lastRing == nil || lastRing.Value == nil {
 		return false
 	}

@@ -1,22 +1,16 @@
 package websocket
 
 import (
-	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	execManager "github.com/AndrienkoAleksandr/machine-exec/exec"
 	"github.com/eclipse/che-lib/websocket"
 	"github.com/eclipse/che/agents/go-agents/core/rest"
 	"log"
-	"net"
 	"net/http"
 	"strconv"
-	"github.com/AndrienkoAleksandr/machine-exec/line-buffer"
-)
-
-const (
-	bufferSize = 8192
+	"github.com/AndrienkoAleksandr/machine-exec/api/model"
+	"time"
 )
 
 var (
@@ -25,7 +19,7 @@ var (
 			return true
 		},
 	}
-	//todo apply ping-pong handler!!!
+	PingPeriod = 30 * time.Second
 )
 
 func Attach(w http.ResponseWriter, r *http.Request, restParmas rest.Params) error {
@@ -46,23 +40,40 @@ func Attach(w http.ResponseWriter, r *http.Request, restParmas rest.Params) erro
 		return err
 	}
 
-	hjrConn := machineExec.Hjr.Conn
-	hjrReader := machineExec.Hjr.Reader
-
 	restoreContent := machineExec.Buffer.GetContent()
 	wsConn.WriteMessage(websocket.TextMessage, []byte(restoreContent))
 
-	go sendClientInputToExec(hjrConn, wsConn)
-	sendExecOutPutToConnection(&machineExec.Buffer, hjrReader, wsConn)
+	machineExec.AddWebSocket(wsConn)
+
+	if !machineExec.Started {
+		machineExec.Start()
+	}
+
+	go sendPingMessage(wsConn)
+	go readWebSocketData(machineExec, wsConn)
 
 	return nil
 }
 
-func sendClientInputToExec(hjrConn net.Conn, wsConn *websocket.Conn) {
+func sendPingMessage(wsConn *websocket.Conn)  {
+	ticker := time.NewTicker(PingPeriod)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if err := wsConn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+			log.Printf("Error occurs on sending ping message to websocket. %v", err)
+			return
+		}
+	}
+}
+
+func readWebSocketData(machineExec *model.MachineExec, wsConn *websocket.Conn) {
+	defer machineExec.RemoveWebSocket(wsConn)
+
 	for {
 		msgType, wsBytes, err := wsConn.ReadMessage()
 		if err != nil {
-			fmt.Println("failed to get read websocket message")
+			log.Printf("failed to get read websocket message")
 			return
 		}
 
@@ -70,41 +81,6 @@ func sendClientInputToExec(hjrConn net.Conn, wsConn *websocket.Conn) {
 			continue
 		}
 
-		if hjrConn.Write(wsBytes); err != nil {
-			fmt.Println("failed to write client content to the exec!!! Cause: " + err.Error())
-			return
-		}
-	}
-}
-
-func sendExecOutPutToConnection(restoreBuffer *line_buffer.LineRingBuffer, hjReader *bufio.Reader, wsConn *websocket.Conn) {
-	buf := make([]byte, bufferSize)
-	var buffer bytes.Buffer
-
-	for {
-		rbBize, err := hjReader.Read(buf)
-		if err != nil {
-			fmt.Println("failed to read exec stdOut/stdError stream!!! " + err.Error())
-			return
-		}
-
-		i, err := normalizeBuffer(&buffer, buf, rbBize) // todo bufio.runeReader
-		if err != nil {
-			log.Printf("Couldn't normalize byte buffer to UTF-8 sequence, due to an error: %s", err.Error())
-			return
-		}
-
-		if rbBize > 0 {
-			restoreBuffer.Write(buffer.Bytes()) // save data to buffer to restore
-			if err := wsConn.WriteMessage(websocket.TextMessage, buffer.Bytes()); err != nil {
-				fmt.Println("failed to write to websocket message!!!" + err.Error())
-				return
-			}
-		}
-
-		buffer.Reset()
-		if i < rbBize {
-			buffer.Write(buf[i:rbBize])
-		}
+		machineExec.MsgChan <- wsBytes
 	}
 }
